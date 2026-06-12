@@ -1434,12 +1434,32 @@ export default function PrincipalDashboard({
 
       // Save teachers if sheet contains records
       if (sheetTeachers && sheetTeachers.length > 0) {
-        setTeachers(sheetTeachers);
+        setTeachers(prev => {
+          return sheetTeachers.map(st => {
+            const existing = prev.find(p => p.id === st.id);
+            if (existing && existing.photoUrl && existing.photoUrl.startsWith('data:image/')) {
+              if (!st.photoUrl || st.photoUrl.startsWith('[BASE64_IMAGE:')) {
+                return { ...st, photoUrl: existing.photoUrl };
+              }
+            }
+            return st;
+          });
+        });
       }
 
       // Save gallery if sheet contains records
       if (sheetGallery && sheetGallery.length > 0) {
-        setGallery(sheetGallery);
+        setGallery(prev => {
+          return sheetGallery.map(sg => {
+            const existing = prev.find(p => p.id === sg.id);
+            if (existing && existing.url && existing.url.startsWith('data:image/')) {
+              if (!sg.url || sg.url.startsWith('[BASE64_IMAGE:')) {
+                return { ...sg, url: existing.url };
+              }
+            }
+            return sg;
+          });
+        });
       }
 
       // Save news if sheet contains records
@@ -1449,10 +1469,17 @@ export default function PrincipalDashboard({
 
       // Save schoolConfig if sheet contains configurations
       if (sheetSchoolConfig && Object.keys(sheetSchoolConfig).length > 0) {
-        setSchoolConfig(prev => ({
-          ...prev,
-          ...sheetSchoolConfig
-        }));
+        setSchoolConfig(prev => {
+          const updatedConfig = { ...prev };
+          Object.entries(sheetSchoolConfig).forEach(([key, val]) => {
+            const existingVal = (prev as any)[key];
+            if (existingVal && existingVal.startsWith('data:image/') && (!val || val.startsWith('[BASE64_IMAGE:'))) {
+              return; // KEEP existing database value
+            }
+            (updatedConfig as any)[key] = val;
+          });
+          return updatedConfig;
+        });
       }
 
       // Save admissions if sheet contains records

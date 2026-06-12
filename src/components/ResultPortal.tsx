@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Printer, RefreshCw, Award } from 'lucide-react';
-import { Result, ClassName } from '../types';
+import { Result, ClassName, SchoolConfig } from '../types';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { getClassSubjects, getSchoolClasses, getSchoolSessions } from '../data';

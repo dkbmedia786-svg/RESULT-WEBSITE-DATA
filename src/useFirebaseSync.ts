@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 function syncArrayToFirestore(collectionName: string, oldArr: any[], newArr: any[]) {
-  // Guard and filter out items without a valid ID
   const validOld = (oldArr || []).filter(i => i && typeof i.id === 'string' && i.id.trim() !== '' && i.id !== 'undefined' && i.id !== 'null');
   const validNew = (newArr || []).filter(i => i && typeof i.id === 'string' && i.id.trim() !== '' && i.id !== 'undefined' && i.id !== 'null');
 
@@ -13,9 +12,7 @@ function syncArrayToFirestore(collectionName: string, oldArr: any[], newArr: any
   newMap.forEach((newItem, id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === 'undefined' || id === 'null') return;
     const oldItem = oldMap.get(id);
-    if (!oldItem) {
-      setDoc(doc(db, collectionName, id), newItem).catch(e => handleFirestoreError(e, OperationType.WRITE, collectionName));
-    } else if (JSON.stringify(oldItem) !== JSON.stringify(newItem)) {
+    if (!oldItem || JSON.stringify(oldItem) !== JSON.stringify(newItem)) {
       setDoc(doc(db, collectionName, id), newItem).catch(e => handleFirestoreError(e, OperationType.WRITE, collectionName));
     }
   });
@@ -31,24 +28,29 @@ function syncArrayToFirestore(collectionName: string, oldArr: any[], newArr: any
 export function useFirebaseSync<T extends {id: string}>(collectionName: string, initialData: T[], enabled = true) {
    const [state, setState] = useState<T[]>(initialData);
    const [isLoaded, setIsLoaded] = useState(false);
-   
+
+   // Ref to prevent initialData from causing re-renders
+   const initialDataRef = useRef(initialData);
+
    useEffect(() => {
      if (!enabled) {
        setIsLoaded(true);
        return;
      }
+     setIsLoaded(false);
+     
      const unsub = onSnapshot(collection(db, collectionName), (snapshot) => {
        const docs = snapshot.docs.map(doc => doc.data() as T);
-       if (!isLoaded && docs.length > 0) {
+       if (docs.length > 0) {
           setState(docs);
-       } else if (!isLoaded && docs.length === 0) {
+       } else {
           // initialize seed
-          initialData.forEach(item => {
+          initialDataRef.current.forEach(item => {
              if (item && item.id && typeof item.id === 'string' && item.id.trim() !== '' && item.id !== 'undefined' && item.id !== 'null') {
                setDoc(doc(db, collectionName, item.id), item).catch(() => {});
              }
           });
-          setState(initialData);
+          setState(initialDataRef.current);
        }
        setIsLoaded(true);
      }, (err) => {
@@ -60,7 +62,7 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
        setIsLoaded(true); // fall back to local
      });
      return () => unsub();
-   }, [collectionName, initialData, isLoaded, enabled]);
+   }, [collectionName, enabled]);
 
    const customSetState = (valOrFunc: React.SetStateAction<T[]>) => {
       setState((prev: T[]) => {
@@ -76,29 +78,32 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
 export function useFirebaseSyncConfig<T>(collectionName: string, initialData: T) {
   const [state, setState] = useState<T>(initialData);
   const [isLoaded, setIsLoaded] = useState(false);
+  const initialDataRef = useRef(initialData);
 
   useEffect(() => {
+     setIsLoaded(false);
      const unsub = onSnapshot(doc(db, collectionName, 'main'), (snap) => {
         if (snap.exists()) {
            setState(snap.data() as T);
-           setIsLoaded(true);
         } else {
-           setDoc(doc(db, collectionName, 'main'), initialData).catch(() => {});
-           setState(initialData);
-           setIsLoaded(true);
+           setDoc(doc(db, collectionName, 'main'), initialDataRef.current).catch(() => {});
+           setState(initialDataRef.current);
         }
+        setIsLoaded(true);
      }, (err) => {
         console.error("Firebase Sync Error", err);
         setIsLoaded(true);
      });
      return () => unsub();
-  }, [collectionName, initialData]);
+  }, [collectionName]);
 
   const customSetState = (valOrFunc: React.SetStateAction<T>) => {
       setState((prev: T) => {
          const newVal = typeof valOrFunc === 'function' ? (valOrFunc as any)(prev) : valOrFunc;
          if (JSON.stringify(prev) !== JSON.stringify(newVal)) {
-           setDoc(doc(db, collectionName, 'main'), newVal);
+           setDoc(doc(db, collectionName, 'main'), newVal).catch(e => {
+             console.error("Failed to sync config:", e);
+           });
          }
          return newVal;
       });
