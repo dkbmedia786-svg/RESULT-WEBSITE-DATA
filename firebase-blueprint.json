@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student in the school.",
+      "type": "object",
+      "properties": {
+        "rollNo": { "type": "string" },
+        "name": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "className": { "type": "string" },
+        "session": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "contactNo": { "type": "string" },
+        "motherName": { "type": "string" },
+        "address": { "type": "string" }
+      },
+      "required": ["rollNo", "name", "fatherName", "className", "session"]
+    },
+    "Result": {
+      "title": "Result",
+      "description": "An academic result for a student.",
+      "type": "object",
+      "properties": {
+        "rollNo": { "type": "string" },
+        "className": { "type": "string" },
+        "passingYear": { "type": "number" },
+        "studentName": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "session": { "type": "string" },
+        "marks": { "type": "object" },
+        "totalMarks": { "type": "number" },
+        "percentage": { "type": "number" },
+        "grade": { "type": "string" },
+        "isPassed": { "type": "boolean" },
+        "motherName": { "type": "string" },
+        "address": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "regNo": { "type": "string" },
+        "udise": { "type": "string" },
+        "division": { "type": "string" },
+        "rank": { "type": "string" },
+        "examType": { "type": "string" }
+      },
+      "required": ["rollNo", "className", "passingYear", "studentName", "session", "marks", "totalMarks", "percentage", "isPassed"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "A teacher in the school.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "designation": { "type": "string" },
+        "qualification": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["name", "designation"]
+    },
+    "AdmissionApplication": {
+      "title": "AdmissionApplication",
+      "description": "An admission application submitted by a student's parent or guardian.",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "motherName": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "className": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "aadhaarNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "gender": { "type": "string" },
+        "previousSchool": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "studentPhoto": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "applyDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      },
+      "required": ["studentName", "fatherName", "dateOfBirth", "className", "contactPhone", "applyDate", "status"]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "An image in the school gallery.",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "caption": { "type": "string" },
+        "category": { "type": "string", "enum": ["Campus", "Events", "Classes", "Achievements"] }
+      },
+      "required": ["url", "caption", "category"]
+    },
+    "NewsItem": {
+      "title": "NewsItem",
+      "description": "A news item or announcement.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "isImportant": { "type": "boolean" }
+      },
+      "required": ["date", "title", "content", "isImportant"]
+    },
+    "SchoolConfig": {
+      "title": "SchoolConfig",
+      "description": "Configuration settings for the school application.",
+      "type": "object",
+      "properties": {
+        "schoolName": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Collections of students"
+    },
+    "results/{resultId}": {
+      "schema": { "$ref": "#/entities/Result" },
+      "description": "Collections of results"
+    },
+    "teachers/{teacherId}": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Collections of teachers"
+    },
+    "admissions/{admissionId}": {
+      "schema": { "$ref": "#/entities/AdmissionApplication" },
+      "description": "Collections of admission applications"
+    },
+    "gallery/{galleryItemId}": {
+      "schema": { "$ref": "#/entities/GalleryItem" },
+      "description": "Collections of gallery images"
+    },
+    "news/{newsItemId}": {
+      "schema": { "$ref": "#/entities/NewsItem" },
+      "description": "Collections of news items"
+    },
+    "config/{docId}": {
+      "schema": { "$ref": "#/entities/SchoolConfig" },
+      "description": "School configuration (usually single document)"
+    }
+  }
+}
