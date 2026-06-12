@@ -1,9 +1,9 @@
 {
-  "projectId": "remixed-project-id",
-  "appId": "remixed-app-id",
-  "apiKey": "remixed-api-key",
-  "authDomain": "remixed-auth-domain",
-  "storageBucket": "remixed-storage-bucket",
-  "messagingSenderId": "remixed-messaging-sender-id",
-  "measurementId": "remixed-measurement-id"
+  "projectId": "my-madarsa-project",
+  "appId": "1:485878516612:web:4b21a2c94fd4138bfaebd1",
+  "apiKey": "AIzaSyDAiqf_c04F4dWzA41iANn2RxV5lrLLCuc",
+  "authDomain": "my-madarsa-project.firebaseapp.com",
+  "storageBucket": "my-madarsa-project.firebasestorage.app",
+  "messagingSenderId": "485878516612",
+  "measurementId": "G-F4DVRNC2Q4"
 }
