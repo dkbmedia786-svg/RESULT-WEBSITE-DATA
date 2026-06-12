@@ -144,6 +144,16 @@ export default function App() {
   useEffect(() => { setStoredData('nu_darkmode', darkMode); }, [darkMode]);
   useEffect(() => { setStoredData('nu_islogged', isLoggedIn); }, [isLoggedIn]);
 
+  // Synchronize state with local storage
+  useEffect(() => { setStoredData('nu_students', students); }, [students]);
+  useEffect(() => { setStoredData('nu_results', results); }, [results]);
+  useEffect(() => { setStoredData('nu_teachers', teachers); }, [teachers]);
+  useEffect(() => { setStoredData('nu_admissions', admissions); }, [admissions]);
+  useEffect(() => { setStoredData('nu_gallery', gallery); }, [gallery]);
+  useEffect(() => { setStoredData('nu_news', news); }, [news]);
+  useEffect(() => { setStoredData('nu_config', schoolConfig); }, [schoolConfig]);
+  useEffect(() => { setStoredData('nu_duas', duas); }, [duas]);
+
   // Handle Dark mode DOM tags update
   useEffect(() => {
     if (darkMode) {
@@ -160,7 +170,153 @@ export default function App() {
     setStoredData('nu_visitors', freshVal);
   }, []);
 
-  // 1. Upload to Google Sheets silently whenever any database parameters change AND we have access token cached
+  // Reusable function to fetch and sync from Google Sheets
+  const syncFromSheet = (quiet = true) => {
+    const spreadsheetId = schoolConfig.googleSpreadsheetId;
+    if (!spreadsheetId) return;
+
+    fetchFromGoogleSheet(spreadsheetId)
+      .then(({ students: sheetStudents, results: sheetResults, teachers: sheetTeachers, gallery: sheetGallery, news: sheetNews, schoolConfig: sheetSchoolConfig, admissions: sheetAdmissions }) => {
+        let updatedTabs: string[] = [];
+
+        if (sheetStudents && sheetStudents.length > 0) {
+          setStudents(prev => {
+            const keysPrev = prev.map(p => `${p.rollNo}_${p.name}_${p.session}`).sort().join('|');
+            const keysNew = sheetStudents.map(p => `${p.rollNo}_${p.name}_${p.session}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('Students');
+            }
+            return sheetStudents.map(ss => {
+              const existing = prev.find(p => p.id === ss.id || p.rollNo === ss.rollNo);
+              if (existing && existing.photoUrl && existing.photoUrl.startsWith('data:image/')) {
+                if (!ss.photoUrl || ss.photoUrl.startsWith('[BASE64_IMAGE:')) {
+                  return { ...ss, photoUrl: existing.photoUrl };
+                }
+              }
+              return ss;
+            });
+          });
+        }
+        if (sheetResults && sheetResults.length > 0) {
+          setResults(prev => {
+            const keysPrev = prev.map(p => `${p.rollNo}_${p.session}_${p.examType || 'Annual'}_${p.totalMarks}`).sort().join('|');
+            const keysNew = sheetResults.map(p => `${p.rollNo}_${p.session}_${p.examType || 'Annual'}_${p.totalMarks}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('Results');
+            }
+            return sheetResults.map(sr => {
+              const existing = prev.find(p => p.id === sr.id || p.rollNo === sr.rollNo);
+              if (existing && existing.photoUrl && existing.photoUrl.startsWith('data:image/')) {
+                if (!sr.photoUrl || sr.photoUrl.startsWith('[BASE64_IMAGE:')) {
+                  return { ...sr, photoUrl: existing.photoUrl };
+                }
+              }
+              return sr;
+            });
+          });
+        }
+        if (sheetTeachers && sheetTeachers.length > 0) {
+          setTeachers(prev => {
+            const keysPrev = prev.map(p => `${p.id}_${p.name}`).sort().join('|');
+            const keysNew = sheetTeachers.map(p => `${p.id}_${p.name}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('Teachers');
+            }
+            return sheetTeachers.map(st => {
+              const existing = prev.find(p => p.id === st.id);
+              if (existing && existing.photoUrl && existing.photoUrl.startsWith('data:image/')) {
+                if (!st.photoUrl || st.photoUrl.startsWith('[BASE64_IMAGE:')) {
+                  return { ...st, photoUrl: existing.photoUrl };
+                }
+              }
+              return st;
+            });
+          });
+        }
+        if (sheetGallery && sheetGallery.length > 0) {
+          setGallery(prev => {
+            const keysPrev = prev.map(p => `${p.id}`).sort().join('|');
+            const keysNew = sheetGallery.map(p => `${p.id}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('Gallery');
+            }
+            return sheetGallery.map(sg => {
+              const existing = prev.find(p => p.id === sg.id);
+              if (existing && existing.url && existing.url.startsWith('data:image/')) {
+                if (!sg.url || sg.url.startsWith('[BASE64_IMAGE:')) {
+                  return { ...sg, url: existing.url };
+                }
+              }
+              return sg;
+            });
+          });
+        }
+        if (sheetNews && sheetNews.length > 0) {
+          setNews(prev => {
+            const keysPrev = prev.map(p => `${p.id}_${p.title}`).sort().join('|');
+            const keysNew = sheetNews.map(p => `${p.id}_${p.title}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('News Ticker');
+            }
+            return sheetNews;
+          });
+        }
+        if (sheetSchoolConfig && Object.keys(sheetSchoolConfig).length > 0) {
+          setSchoolConfig(prev => {
+            const updatedConfig = { ...prev };
+            let configChanged = false;
+            Object.entries(sheetSchoolConfig).forEach(([key, val]) => {
+              const existingVal = (prev as any)[key];
+              if (existingVal && existingVal.startsWith('data:image/') && (!val || val.startsWith('[BASE64_IMAGE:'))) {
+                return; // maintain full image payload instead of truncations
+              }
+              if (String(existingVal) !== String(val)) {
+                configChanged = true;
+              }
+              (updatedConfig as any)[key] = val;
+            });
+            if (configChanged) {
+              updatedTabs.push('School Information');
+            }
+            return updatedConfig;
+          });
+        }
+        if (sheetAdmissions && sheetAdmissions.length > 0) {
+          setAdmissions(prev => {
+            const keysPrev = prev.map(p => `${p.id}_${p.status}`).sort().join('|');
+            const keysNew = sheetAdmissions.map(p => `${p.id}_${p.status}`).sort().join('|');
+            if (keysPrev !== keysNew) {
+              updatedTabs.push('Admissions');
+            }
+            return sheetAdmissions.map(sa => {
+              const existing = prev.find(p => p.id === sa.id);
+              if (existing && existing.studentPhoto && existing.studentPhoto.startsWith('data:image/')) {
+                if (!sa.studentPhoto || sa.studentPhoto.startsWith('[BASE64_IMAGE:')) {
+                  return { ...sa, studentPhoto: existing.studentPhoto };
+                }
+              }
+              return sa;
+            });
+          });
+        }
+
+        if (updatedTabs.length > 0) {
+          console.log(`Detected changes and updated local state from Google Sheet: ${updatedTabs.join(', ')}`);
+        }
+      })
+      .catch(e => {
+        console.error('Failed to sync live data from Google Sheet:', e);
+      });
+  };
+
+  // 1. Initial Load Sync
+  useEffect(() => {
+    if (!loading) {
+      syncFromSheet(true);
+    }
+  }, [schoolConfig.googleSpreadsheetId, loading]);
+
+  // 2. Upload to Google Sheets silently whenever any database parameters change AND we have access token cached
   useEffect(() => {
     const spreadsheetId = schoolConfig.googleSpreadsheetId;
     const token = getCachedAccessToken();

@@ -10,7 +10,6 @@ service cloud.firestore {
     // Making write restricted to Admin (User's email).
     function isAdmin() { 
       return request.auth != null && 
-             request.auth.token.email_verified == true && 
              request.auth.token.email == "dkbmedia786@gmail.com"; 
     }
 
