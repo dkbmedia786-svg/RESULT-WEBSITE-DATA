@@ -434,7 +434,7 @@ export default function App() {
         )}
 
         {currentTab === 'results' && (
-          <ResultPortal results={results} triggerNotification={triggerNotification} />
+          <ResultPortal results={results} config={schoolConfig} triggerNotification={triggerNotification} />
         )}
 
         {currentTab === 'admissions' && (

@@ -185,6 +185,8 @@ export interface SchoolConfig {
 
   // Custom Logo URL
   logoUrl?: string;
+  printLogoUrl?: string;
+  printUrduLogoUrl?: string;
 
   // Google Sheets integration configuration
   googleSpreadsheetId?: string;

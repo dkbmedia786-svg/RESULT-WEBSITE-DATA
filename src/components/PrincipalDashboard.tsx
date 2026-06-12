@@ -525,15 +525,7 @@ export default function PrincipalDashboard({
   const [newInlineSubjectName, setNewInlineSubjectName] = useState("");
   const [selectedRolls, setSelectedRolls] = useState<string[]>([]);
   const [bulkPrintResults, setBulkPrintResults] = useState<Result[]>([]);
-  const [adminSchoolLogo, setAdminSchoolLogo] = useState("");
-  const [adminUrduLogo, setAdminUrduLogo] = useState("");
-
-  useEffect(() => {
-    const sLogo = localStorage.getItem("m_logo");
-    if (sLogo) setAdminSchoolLogo(sLogo);
-    const uLogo = localStorage.getItem("m_urdu_logo");
-    if (uLogo) setAdminUrduLogo(uLogo);
-  }, []);
+    
 
   // Handle Principal Login Attempt
   const handleLogin = async (e: React.FormEvent) => {
@@ -2168,21 +2160,23 @@ export default function PrincipalDashboard({
                   <input
                     type="file"
                     id="adminLogoUploadInput"
-                    accept="image/png"
+                    accept="image/png, image/jpeg, image/jpg"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        if (file.type !== "image/png") {
-                          alert("Please upload a transparent .png format logo only to avoid background errors!");
-                        }
+                        
                         const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          if (ev.target?.result) {
-                            localStorage.setItem("m_logo", ev.target.result as string);
-                            setAdminSchoolLogo(ev.target.result as string);
-                          }
-                        };
+                        reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, printLogoUrl: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, printLogoUrl: ev.target.result as string });
+    }
+  }
+};
                         reader.readAsDataURL(file);
                       }
                     }}
@@ -2190,21 +2184,23 @@ export default function PrincipalDashboard({
                   <input
                     type="file"
                     id="adminUrduUploadInput"
-                    accept="image/png"
+                    accept="image/png, image/jpeg, image/jpg"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        if (file.type !== "image/png") {
-                          alert("Please upload a transparent .png format Urdu name logo only!");
-                        }
+                        
                         const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          if (ev.target?.result) {
-                            localStorage.setItem("m_urdu_logo", ev.target.result as string);
-                            setAdminUrduLogo(ev.target.result as string);
-                          }
-                        };
+                        reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, printUrduLogoUrl: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, printUrduLogoUrl: ev.target.result as string });
+    }
+  }
+};
                         reader.readAsDataURL(file);
                       }
                     }}
@@ -2218,11 +2214,16 @@ export default function PrincipalDashboard({
                       const file = e.target.files?.[0];
                       if (file) {
                         const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          if (ev.target?.result) {
-                            setAdminPhoto(ev.target.result as string);
-                          }
-                        };
+                        reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setAdminPhoto(compressed);
+    } catch {
+      setAdminPhoto(ev.target.result as string);
+    }
+  }
+};
                         reader.readAsDataURL(file);
                       }
                     }}
@@ -2303,8 +2304,8 @@ export default function PrincipalDashboard({
                         border: '1.5px dashed #a5d6a7'
                       }}
                     >
-                      {adminSchoolLogo ? (
-                        <img src={adminSchoolLogo} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
+                      {schoolConfig.printLogoUrl ? (
+                        <img src={schoolConfig.printLogoUrl} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
                       ) : (
                         <div className="w-[150px] h-[150px] rounded-full border-4 border-[#1e5631] border-dashed flex flex-col items-center justify-center p-2 bg-[#fffdd0]/40 text-center">
                           <span className="text-[28px]">🕌</span>
@@ -2333,10 +2334,10 @@ export default function PrincipalDashboard({
                         title="Click to Upload Custom Urdu Banner"
                         style={{ cursor: 'pointer' }}
                       >
-                        {adminUrduLogo ? (
+                        {schoolConfig.printUrduLogoUrl ? (
                           <img 
                             id="urduLogoImg" 
-                            src={adminUrduLogo} 
+                            src={schoolConfig.printUrduLogoUrl} 
                             alt="Urdu Name calligraphy" 
                             style={{ maxWidth: '800px', height: '130px', objectFit: 'contain', margin: 'auto', backgroundColor: 'transparent' }} 
                           />
@@ -3528,8 +3529,8 @@ export default function PrincipalDashboard({
                               justifyContent: 'center'
                             }}
                           >
-                            {adminSchoolLogo ? (
-                              <img src={adminSchoolLogo} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
+                            {schoolConfig.printLogoUrl ? (
+                              <img src={schoolConfig.printLogoUrl} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
                             ) : (
                               <div className="w-[150px] h-[150px] rounded-full border-4 border-[#1e5631] border-dashed flex flex-col items-center justify-center p-2 bg-[#fffdd0]/40 text-center">
                                 <span className="text-[28px]">🕌</span>
@@ -3551,9 +3552,9 @@ export default function PrincipalDashboard({
                             }}
                           >
                             <div>
-                              {adminUrduLogo ? (
+                              {schoolConfig.printUrduLogoUrl ? (
                                 <img 
-                                  src={adminUrduLogo} 
+                                  src={schoolConfig.printUrduLogoUrl} 
                                   alt="Urdu Name calligraphy" 
                                   style={{ maxWidth: '800px', height: '130px', objectFit: 'contain', margin: 'auto', backgroundColor: 'transparent' }} 
                                 />
@@ -3865,23 +3866,26 @@ export default function PrincipalDashboard({
                       />
                     </div>
                     <div className="flex flex-col gap-1 col-span-2">
-                      <label className="font-bold text-slate-750 dark:text-slate-350">Profile Photo (Transparent PNG .png only prefer so back-ground behind looks pristine)</label>
+                      <label className="font-bold text-slate-750 dark:text-slate-350">Profile Photo (PNG/JPG allowed)</label>
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
-                          accept="image/png"
+                          accept="image/png, image/jpeg, image/jpg"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              if (file.type !== "image/png") {
-                                alert("Please select a transparent .png format photo only!");
-                              }
+                              
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setNewTeacher(prev => ({ ...prev, photoUrl: ev.target!.result as string }));
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setNewTeacher(prev => ({ ...prev, photoUrl: compressed }));
+    } catch {
+      setNewTeacher(prev => ({ ...prev, photoUrl: ev.target!.result as string }));
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -3942,23 +3946,26 @@ export default function PrincipalDashboard({
                       />
                     </div>
                     <div className="flex flex-col gap-1 col-span-2">
-                      <label className="font-bold text-slate-750 dark:text-slate-350">Profile Photo (Transparent PNG .png folder so backend doesn't black)</label>
+                      <label className="font-bold text-slate-750 dark:text-slate-350">Profile Photo (PNG/JPG allowed)</label>
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
-                          accept="image/png"
+                          accept="image/png, image/jpeg, image/jpg"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              if (file.type !== "image/png") {
-                                alert("Please select a transparent .png format photo only!");
-                              }
+                              
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setEditingTeacher(prev => prev ? ({ ...prev, photoUrl: ev.target!.result as string }) : null);
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setEditingTeacher(prev => prev ? ({ ...prev, photoUrl: compressed }) : null);
+    } catch {
+      setEditingTeacher(prev => prev ? ({ ...prev, photoUrl: ev.target!.result as string }) : null);
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -4172,11 +4179,16 @@ export default function PrincipalDashboard({
                               return;
                             }
                             const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              if (ev.target?.result) {
-                                setNewGallery(prev => ({ ...prev, url: ev.target!.result as string }));
-                              }
-                            };
+                            reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setNewGallery(prev => ({ ...prev, url: compressed }));
+    } catch {
+      setNewGallery(prev => ({ ...prev, url: ev.target!.result as string }));
+    }
+  }
+};
                             reader.readAsDataURL(file);
                           }
                         }}
@@ -4196,11 +4208,16 @@ export default function PrincipalDashboard({
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setNewGallery(prev => ({ ...prev, url: ev.target!.result as string }));
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setNewGallery(prev => ({ ...prev, url: compressed }));
+    } catch {
+      setNewGallery(prev => ({ ...prev, url: ev.target!.result as string }));
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -4682,11 +4699,16 @@ export default function PrincipalDashboard({
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setSchoolConfig({ ...schoolConfig, principalPhotoUrl: ev.target.result as string });
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, principalPhotoUrl: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, principalPhotoUrl: ev.target.result as string });
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -4851,11 +4873,16 @@ export default function PrincipalDashboard({
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setSchoolConfig({ ...schoolConfig, heroBg1: ev.target.result as string });
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, heroBg1: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, heroBg1: ev.target.result as string });
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -4898,11 +4925,16 @@ export default function PrincipalDashboard({
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setSchoolConfig({ ...schoolConfig, heroBg2: ev.target.result as string });
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, heroBg2: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, heroBg2: ev.target.result as string });
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -4945,11 +4977,16 @@ export default function PrincipalDashboard({
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                if (ev.target?.result) {
-                                  setSchoolConfig({ ...schoolConfig, heroBg3: ev.target.result as string });
-                                }
-                              };
+                              reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, heroBg3: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, heroBg3: ev.target.result as string });
+    }
+  }
+};
                               reader.readAsDataURL(file);
                             }
                           }}
@@ -5182,11 +5219,16 @@ export default function PrincipalDashboard({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    if (ev.target?.result) {
-                                      setSchoolConfig({ ...schoolConfig, fac1Img: ev.target.result as string });
-                                    }
-                                  };
+                                  reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, fac1Img: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, fac1Img: ev.target.result as string });
+    }
+  }
+};
                                   reader.readAsDataURL(file);
                                 }
                               }}
@@ -5253,11 +5295,16 @@ export default function PrincipalDashboard({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    if (ev.target?.result) {
-                                      setSchoolConfig({ ...schoolConfig, fac2Img: ev.target.result as string });
-                                    }
-                                  };
+                                  reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, fac2Img: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, fac2Img: ev.target.result as string });
+    }
+  }
+};
                                   reader.readAsDataURL(file);
                                 }
                               }}
@@ -5324,11 +5371,16 @@ export default function PrincipalDashboard({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    if (ev.target?.result) {
-                                      setSchoolConfig({ ...schoolConfig, fac3Img: ev.target.result as string });
-                                    }
-                                  };
+                                  reader.onload = async (ev) => {
+  if (ev.target?.result) {
+    try {
+      const compressed = await compressImageBase64(ev.target.result as string);
+      setSchoolConfig({ ...schoolConfig, fac3Img: compressed });
+    } catch {
+      setSchoolConfig({ ...schoolConfig, fac3Img: ev.target.result as string });
+    }
+  }
+};
                                   reader.readAsDataURL(file);
                                 }
                               }}

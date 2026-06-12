@@ -7,6 +7,7 @@ import { getClassSubjects, getSchoolClasses, getSchoolSessions } from '../data';
 
 interface ResultPortalProps {
   results: Result[];
+  config: SchoolConfig;
   triggerNotification?: (title: string, message: string, type?: 'success' | 'info' | 'warning' | 'error' | 'congrats') => void;
 }
 
@@ -67,7 +68,7 @@ export function formatClassName(className: string | undefined): string {
   });
 }
 
-export default function ResultPortal({ results, triggerNotification }: ResultPortalProps) {
+export default function ResultPortal({ results, config, triggerNotification }: ResultPortalProps) {
   const [rollNo, setRollNo] = useState('');
   const [selectedClass, setSelectedClass] = useState<ClassName>('EDADIA');
   const [selectedExamType, setSelectedExamType] = useState<string>('Annual');
@@ -147,20 +148,12 @@ export default function ResultPortal({ results, triggerNotification }: ResultPor
   }, [results]);
 
   // Custom persistent logos from principal control panel uploads
-  const [schoolLogo, setSchoolLogo] = useState<string>('');
-  const [urduLogo, setUrduLogo] = useState<string>('');
+  
   
   // Local printing rendering support
   const [printImage, setPrintImage] = useState<string>('');
   const [isGeneratingPrint, setIsGeneratingPrint] = useState(false);
 
-  useEffect(() => {
-    // Load custom logos uploaded in panel
-    const logo = localStorage.getItem("m_logo");
-    if (logo) setSchoolLogo(logo);
-    const uLogo = localStorage.getItem("m_urdu_logo");
-    if (uLogo) setUrduLogo(uLogo);
-  }, [searchTriggered]);
 
   const classes = getSchoolClasses() as ClassName[];
 
@@ -853,8 +846,8 @@ export default function ResultPortal({ results, triggerNotification }: ResultPor
                       justifyContent: 'center'
                     }}
                   >
-                    {schoolLogo ? (
-                      <img src={schoolLogo} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
+                    {(config.printLogoUrl || "/school-logo.png") ? (
+                      <img src={(config.printLogoUrl || "/school-logo.png")} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
                     ) : (
                       <div className="w-[150px] h-[150px] rounded-full border-4 border-[#1e5631] border-dashed flex flex-col items-center justify-center p-2 bg-[#fffdd0]/40 text-center">
                         <span className="text-[34px]">🕌</span>
@@ -877,10 +870,10 @@ export default function ResultPortal({ results, triggerNotification }: ResultPor
                     }}
                   >
                     <div>
-                      {urduLogo ? (
+                      {(config.printUrduLogoUrl || "/result-banner.png") ? (
                         <img 
                           id="urduLogoImg" 
-                          src={urduLogo} 
+                          src={(config.printUrduLogoUrl || "/result-banner.png")} 
                           alt="Urdu Name calligraphy" 
                           style={{ maxWidth: '800px', height: '130px', objectFit: 'contain', margin: 'auto', backgroundColor: 'transparent' }} 
                         />
