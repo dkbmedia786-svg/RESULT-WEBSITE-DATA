@@ -61,9 +61,23 @@ export default function App() {
   // Visual/Environment parameters
   const [currentTab, setCurrentTab] = useState('home');
   const [darkMode, setDarkMode] = useState(() => getStoredData('nu_darkmode', false));
-  const [isLoggedIn, setIsLoggedIn] = useState(() => getStoredData('nu_islogged', false));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [visitorCount, setVisitorCount] = useState(() => getStoredData('nu_visitors', 384));
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Monitor Firebase Auth State
+  useEffect(() => {
+    import('./firebase').then(({ auth }) => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user && user.email === 'dkbmedia786@gmail.com') {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      });
+      return () => unsubscribe();
+    });
+  }, []);
 
   // Central Database States backed up to Firestore
   const [students, setStudents, studentsLoaded] = useFirebaseSync<Student>('students', getStoredData('nu_students', INITIAL_STUDENTS));
