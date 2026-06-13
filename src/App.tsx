@@ -325,8 +325,9 @@ export default function App() {
 
   // 1. Initial Load Sync
   useEffect(() => {
-    // Disabled auto-sync from sheet on load because Firestore is now the primary database.
-    // Syncing from sheet overwrites base64 images that are truncated in the sheet back into Firestore.
+    if (!loading && schoolConfig.googleSpreadsheetId) {
+       syncFromSheet(true);
+    }
   }, [schoolConfig.googleSpreadsheetId, loading]);
 
   // 2. Upload to Google Sheets silently whenever any database parameters change AND we have access token cached
