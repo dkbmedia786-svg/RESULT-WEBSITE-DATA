@@ -42,19 +42,7 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
      const unsub = onSnapshot(collection(db, collectionName), (snapshot) => {
        const docs = snapshot.docs.map(doc => doc.data() as T);
        if (docs.length > 0) {
-          // Prevent wiping out data that was added locally when offline or unauthenticated
-          if (initialDataRef.current.length > docs.length) {
-             const newDocsMap = new Map(docs.map(d => [d.id, d]));
-             initialDataRef.current.forEach(item => {
-                if (item && item.id && !newDocsMap.has(item.id)) {
-                   setDoc(doc(db, collectionName, item.id), item).catch(() => {});
-                   newDocsMap.set(item.id, item);
-                }
-             });
-             setState(Array.from(newDocsMap.values()));
-          } else {
-             setState(docs);
-          }
+          setState(docs);
        } else {
           // initialize seed
           initialDataRef.current.forEach(item => {
