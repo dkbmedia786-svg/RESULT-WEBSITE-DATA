@@ -1633,12 +1633,35 @@ export default function PrincipalDashboard({
           </p>
         </div>
         <button
-          onClick={() => setIsLoggedIn(false)}
+          onClick={() => {
+            auth.signOut();
+            setIsLoggedIn(false);
+            setCachedAccessToken(null);
+          }}
           className="px-4 py-2 bg-red-650 hover:bg-red-750 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-colors"
         >
           Secured Sign Out
         </button>
       </div>
+
+      {!getCachedAccessToken() && (
+         <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 p-4 rounded-xl flex items-center justify-between gap-4">
+           <div>
+             <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+               <AlertCircle className="w-4 h-4" /> Drive Access Missing!
+             </h4>
+             <p className="text-xs text-amber-800 dark:text-amber-400">
+               Photo & Image uploads will NOT be saved to Google Drive and may become corrupted or broken because our Drive Authentication token has expired.
+             </p>
+           </div>
+           <button
+             onClick={handleLogin}
+             className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow whitespace-nowrap"
+           >
+             Re-Authorize
+           </button>
+         </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Hand Navigation Panel */}

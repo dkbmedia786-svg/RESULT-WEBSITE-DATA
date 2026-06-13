@@ -325,9 +325,8 @@ export default function App() {
 
   // 1. Initial Load Sync
   useEffect(() => {
-    if (!loading && schoolConfig.googleSpreadsheetId) {
-       syncFromSheet(true);
-    }
+    // Disabled auto-sync from sheet on load. Firestore is the primary database.
+    // Syncing from sheet overwrites current state with sheet data.
   }, [schoolConfig.googleSpreadsheetId, loading]);
 
   // 2. Upload to Google Sheets silently whenever any database parameters change AND we have access token cached
