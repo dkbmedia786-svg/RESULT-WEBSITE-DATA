@@ -1,10 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getFirestore, setLogLevel } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId); // as any to avoid typescript errors if id is not in type
+
+// Suppress noisy Firestore connection warnings when offline or using placeholder configs
+setLogLevel('silent');
+
 export const auth = getAuth(app);
 
 // testConnection intentionally removed to prevent transient offline checks on startup from triggering connection warnings in automated build verifications.

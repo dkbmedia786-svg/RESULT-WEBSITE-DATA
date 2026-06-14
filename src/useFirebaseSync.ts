@@ -59,9 +59,11 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
           setState(initialDataRef.current);
        }
        setIsLoaded(true);
-     }, (err) => {
+     }, (err: any) => {
        if (err.code === 'permission-denied') {
          console.warn(`Firestore read permission denied for collection '${collectionName}'. Gracefully falling back to local.`);
+       } else if (err.code === 'unavailable') {
+         console.warn(`Firestore backend unavailable for collection '${collectionName}'. Gracefully falling back to local.`);
        } else {
          console.error("Firebase Sync Error", err);
        }
@@ -96,8 +98,12 @@ export function useFirebaseSyncConfig<T>(collectionName: string, initialData: T)
            setState(initialDataRef.current);
         }
         setIsLoaded(true);
-     }, (err) => {
-        console.error("Firebase Sync Error", err);
+     }, (err: any) => {
+        if (err.code === 'unavailable') {
+          console.warn("Firestore backend unavailable for config sync. Gracefully falling back to local.");
+        } else {
+          console.error("Firebase Sync Error", err);
+        }
         setIsLoaded(true);
      });
      return () => unsub();
