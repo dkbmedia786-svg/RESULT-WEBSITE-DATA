@@ -36,7 +36,28 @@ export function compressImageBase64(base64Str: string, maxWidth = 180, maxHeight
         
         // JPEG format compressing at 0.7 quality produces ultra lightweight binaries
         const compressed = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(compressed);
+        
+        const base64Data = compressed.split(',')[1];
+        const formData = new FormData();
+        formData.append('image', base64Data);
+
+        fetch('https://api.imgbb.com/1/upload?key=49080577ec49448da0fff3950c7f3881', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success) {
+            resolve(data.data.url);
+          } else {
+            console.warn("ImgBB upload failed, falling back to base64", data);
+            resolve(compressed);
+          }
+        })
+        .catch(err => {
+          console.error("ImgBB API error:", err);
+          resolve(compressed);
+        });
       } else {
         resolve(base64Str);
       }
