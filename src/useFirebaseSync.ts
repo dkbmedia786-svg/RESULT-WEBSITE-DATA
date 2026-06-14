@@ -2,6 +2,39 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
+export const fixDriveUrl = (url: any): string => {
+  if (typeof url !== 'string' || !url) return url;
+  if (url.startsWith('[BASE64_IMAGE:')) return '';
+  if (url.includes('drive.google.com/uc') && url.includes('id=')) {
+    const idMatch = url.match(/id=([^&]+)/);
+    if (idMatch && idMatch[1]) {
+      const timestampMatch = url.match(/t=([0-9]+)/);
+      let newUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+      if (timestampMatch) {
+         newUrl += `&t=${timestampMatch[1]}`;
+      }
+      return newUrl;
+    }
+  }
+  return url;
+};
+
+export const recursiveFixDriveUrls = (obj: any): any => {
+  if (!obj) return obj;
+  if (typeof obj === 'string') return fixDriveUrl(obj);
+  if (Array.isArray(obj)) return obj.map(recursiveFixDriveUrls);
+  if (typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newObj[key] = recursiveFixDriveUrls(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+};
+
 function syncArrayToFirestore(collectionName: string, oldArr: any[], newArr: any[]) {
   const validOld = (oldArr || []).filter(i => i && typeof i.id === 'string' && i.id.trim() !== '' && i.id !== 'undefined' && i.id !== 'null');
   const validNew = (newArr || []).filter(i => i && typeof i.id === 'string' && i.id.trim() !== '' && i.id !== 'undefined' && i.id !== 'null');
@@ -46,7 +79,7 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
      setIsLoaded(false);
      
      const unsub = onSnapshot(collection(db, collectionName), (snapshot) => {
-       const docs = snapshot.docs.map(doc => doc.data() as T);
+       const docs = snapshot.docs.map(doc => recursiveFixDriveUrls(doc.data() as T));
        if (docs.length > 0) {
           setState(docs);
        } else {
@@ -74,7 +107,8 @@ export function useFirebaseSync<T extends {id: string}>(collectionName: string, 
 
    const customSetState = (valOrFunc: React.SetStateAction<T[]>) => {
       setState((prev: T[]) => {
-         const newArr = typeof valOrFunc === 'function' ? (valOrFunc as any)(prev) : valOrFunc;
+         let newArr = typeof valOrFunc === 'function' ? (valOrFunc as any)(prev) : valOrFunc;
+         newArr = recursiveFixDriveUrls(newArr);
          syncArrayToFirestore(collectionName, prev, newArr);
          return newArr;
       });
@@ -92,7 +126,7 @@ export function useFirebaseSyncConfig<T>(collectionName: string, initialData: T)
      setIsLoaded(false);
      const unsub = onSnapshot(doc(db, collectionName, 'main'), (snap) => {
         if (snap.exists()) {
-           setState(snap.data() as T);
+           setState(recursiveFixDriveUrls(snap.data() as T));
         } else {
            setDoc(doc(db, collectionName, 'main'), initialDataRef.current).catch(() => {});
            setState(initialDataRef.current);
@@ -111,7 +145,8 @@ export function useFirebaseSyncConfig<T>(collectionName: string, initialData: T)
 
   const customSetState = (valOrFunc: React.SetStateAction<T>) => {
       setState((prev: T) => {
-         const newVal = typeof valOrFunc === 'function' ? (valOrFunc as any)(prev) : valOrFunc;
+         let newVal = typeof valOrFunc === 'function' ? (valOrFunc as any)(prev) : valOrFunc;
+         newVal = recursiveFixDriveUrls(newVal);
          if (JSON.stringify(prev) !== JSON.stringify(newVal)) {
            setDoc(doc(db, collectionName, 'main'), newVal).catch(e => {
              console.error("Failed to sync config:", e);

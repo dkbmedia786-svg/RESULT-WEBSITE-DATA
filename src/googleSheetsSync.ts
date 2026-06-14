@@ -551,6 +551,23 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
     const rawStudents = await fetchTab('Students');
     const rawResults = await fetchTab('Results');
 
+    const fixDriveUrl = (url: any): string => {
+      if (typeof url !== 'string' || !url) return '';
+      if (url.startsWith('[BASE64_IMAGE:')) return ''; // Prevents broken image links if base64 was lost
+      if (url.includes('drive.google.com/uc') && url.includes('id=')) {
+        const idMatch = url.match(/id=([^&]+)/);
+        if (idMatch && idMatch[1]) {
+          const timestampMatch = url.match(/t=([0-9]+)/);
+          let newUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+          if (timestampMatch) {
+             newUrl += `&t=${timestampMatch[1]}`;
+          }
+          return newUrl;
+        }
+      }
+      return url;
+    };
+
     const students: Student[] = rawStudents.map(s => ({
       id: String(s.id || ''),
       rollNo: String(s.rollNo || ''),
@@ -558,7 +575,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
       fatherName: String(s.fatherName || ''),
       className: s.className || 'EDADIA',
       session: String(s.session || ''),
-      photoUrl: String(s.photoUrl || ''),
+      photoUrl: fixDriveUrl(s.photoUrl),
       dateOfBirth: String(s.dateOfBirth || ''),
       contactNo: String(s.contactNo || ''),
       motherName: s.motherName ? String(s.motherName) : undefined,
@@ -584,7 +601,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
         passingYear: Number(r.passingYear) || new Date().getFullYear(),
         studentName: String(r.studentName || ''),
         fatherName: String(r.fatherName || ''),
-        photoUrl: String(r.photoUrl || ''),
+        photoUrl: fixDriveUrl(r.photoUrl),
         session: String(r.session || ''),
         marks,
         totalMarks: Number(r.totalMarks) || 600,
@@ -614,7 +631,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
         name: String(t.name || ''),
         designation: String(t.designation || ''),
         qualification: String(t.qualification || ''),
-        photoUrl: String(t.photoUrl || ''),
+        photoUrl: fixDriveUrl(t.photoUrl),
         phone: String(t.phone || ''),
         email: String(t.email || '')
       })).filter(t => t.id && t.id.trim() !== '' && t.id !== 'undefined');
@@ -627,7 +644,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
       const rawGallery = await fetchTab('Gallery');
       gallery = rawGallery.map(g => ({
         id: String(g.id || ''),
-        url: String(g.url || ''),
+        url: fixDriveUrl(g.url),
         caption: String(g.caption || ''),
         category: (g.category || 'Campus') as 'Campus' | 'Events' | 'Classes' | 'Achievements'
       })).filter(g => g.id && g.id.trim() !== '' && g.id !== 'undefined');
@@ -657,7 +674,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
         const key = row.key || row.col_0;
         const val = row.value || row.col_1;
         if (key && typeof key === 'string' && key !== 'key' && key.trim() !== '') {
-          parsedConfig[key.trim()] = val !== undefined ? String(val).trim() : '';
+          parsedConfig[key.trim()] = val !== undefined ? fixDriveUrl(String(val).trim()) : '';
         }
       });
       if (Object.keys(parsedConfig).length > 0) {
@@ -685,7 +702,7 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
         gender: a.gender ? String(a.gender) as 'Male' | 'Female' | 'Other' : undefined,
         previousSchool: a.previousSchool ? String(a.previousSchool) : undefined,
         bloodGroup: a.bloodGroup ? String(a.bloodGroup) : undefined,
-        studentPhoto: a.studentPhoto ? String(a.studentPhoto) : undefined,
+        studentPhoto: a.studentPhoto ? fixDriveUrl(String(a.studentPhoto)) : undefined,
         academicYear: a.academicYear ? String(a.academicYear) : undefined,
         applyDate: String(a.applyDate || ''),
         status: (a.status || 'pending') as 'pending' | 'approved' | 'rejected'

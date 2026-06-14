@@ -66,9 +66,18 @@ export function compressImageBase64(base64Str: string, maxWidth = 800, maxHeight
         .then(res => res.json())
         .then(data => {
           if (data && data.url) {
+            // Transform Google Drive URL to thumbnail view to avoid iframe blocking
+            let finalUrl = data.url;
+            if (finalUrl.includes('drive.google.com/uc') && finalUrl.includes('id=')) {
+              const idMatch = finalUrl.match(/id=([^&]+)/);
+              if (idMatch && idMatch[1]) {
+                finalUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+              }
+            }
+            
             // Live caching bust marker (adds ?t=TIMESTAMP or &t=TIMESTAMP)
-            const separator = data.url.includes('?') ? '&' : '?';
-            const driveUrlWithLiveUpdate = `${data.url}${separator}t=${new Date().getTime()}`;
+            const separator = finalUrl.includes('?') ? '&' : '?';
+            const driveUrlWithLiveUpdate = `${finalUrl}${separator}t=${new Date().getTime()}`;
             resolve(driveUrlWithLiveUpdate);
           } else {
             console.warn("Google Drive upload failed or no URL returned.", data);
