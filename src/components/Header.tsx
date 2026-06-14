@@ -156,7 +156,7 @@ export default function Header({
         <div className="flex items-center gap-3.5 group cursor-pointer" onClick={() => setCurrentTab('home')}>
           <div className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-amber-400 via-emerald-650 to-emerald-800 p-0.5 shadow-md shadow-emerald-900/10">
             <div className="w-full h-full bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-emerald-700 dark:text-emerald-400 overflow-hidden">
-              {config.logoUrl ? (
+              {config.logoUrl && !config.logoUrl.startsWith('[BASE64_IMAGE:') ? (
                 <img src={config.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
               ) : (
                 <School className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 animate-pulse" />

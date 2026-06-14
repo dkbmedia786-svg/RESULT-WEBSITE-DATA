@@ -2335,7 +2335,7 @@ export default function PrincipalDashboard({
                         border: '1.5px dashed #a5d6a7'
                       }}
                     >
-                      {schoolConfig.printLogoUrl ? (
+                      {schoolConfig.printLogoUrl && !schoolConfig.printLogoUrl.startsWith('[BASE64_IMAGE:') ? (
                         <img src={schoolConfig.printLogoUrl} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
                       ) : (
                         <div className="w-[150px] h-[150px] rounded-full border-4 border-[#1e5631] border-dashed flex flex-col items-center justify-center p-2 bg-[#fffdd0]/40 text-center">
@@ -2365,7 +2365,7 @@ export default function PrincipalDashboard({
                         title="Click to Upload Custom Urdu Banner"
                         style={{ cursor: 'pointer' }}
                       >
-                        {schoolConfig.printUrduLogoUrl ? (
+                        {schoolConfig.printUrduLogoUrl && !schoolConfig.printUrduLogoUrl.startsWith('[BASE64_IMAGE:') ? (
                           <img 
                             id="urduLogoImg" 
                             src={schoolConfig.printUrduLogoUrl} 
@@ -3560,7 +3560,7 @@ export default function PrincipalDashboard({
                               justifyContent: 'center'
                             }}
                           >
-                            {schoolConfig.printLogoUrl ? (
+                            {schoolConfig.printLogoUrl && !schoolConfig.printLogoUrl.startsWith('[BASE64_IMAGE:') ? (
                               <img src={schoolConfig.printLogoUrl} alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }} />
                             ) : (
                               <div className="w-[150px] h-[150px] rounded-full border-4 border-[#1e5631] border-dashed flex flex-col items-center justify-center p-2 bg-[#fffdd0]/40 text-center">
@@ -3583,7 +3583,7 @@ export default function PrincipalDashboard({
                             }}
                           >
                             <div>
-                              {schoolConfig.printUrduLogoUrl ? (
+                              {schoolConfig.printUrduLogoUrl && !schoolConfig.printUrduLogoUrl.startsWith('[BASE64_IMAGE:') ? (
                                 <img 
                                   src={schoolConfig.printUrduLogoUrl} 
                                   alt="Urdu Name calligraphy" 
@@ -4766,7 +4766,7 @@ export default function PrincipalDashboard({
                     <div className="space-y-1 text-xs">
                       <label className="font-bold text-slate-650 dark:text-slate-300 block mb-1">School Custom Logo (स्कूल का लोगो - गोल आकार में दिखेगा)</label>
                       <div className="flex items-center gap-3">
-                        {schoolConfig.logoUrl ? (
+                        {schoolConfig.logoUrl && !schoolConfig.logoUrl.startsWith('[BASE64_IMAGE:') ? (
                           <img
                             src={schoolConfig.logoUrl}
                             alt="School Logo"

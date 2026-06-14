@@ -13,14 +13,20 @@ function syncArrayToFirestore(collectionName: string, oldArr: any[], newArr: any
     if (!id || typeof id !== 'string' || id.trim() === '' || id === 'undefined' || id === 'null') return;
     const oldItem = oldMap.get(id);
     if (!oldItem || JSON.stringify(oldItem) !== JSON.stringify(newItem)) {
-      setDoc(doc(db, collectionName, id), newItem).catch(e => handleFirestoreError(e, OperationType.WRITE, collectionName));
+      setDoc(doc(db, collectionName, id), newItem).catch(e => {
+        alert(`Database Save Error (${collectionName}): ` + e.message);
+        handleFirestoreError(e, OperationType.WRITE, collectionName);
+      });
     }
   });
 
   oldMap.forEach((oldItem, id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === 'undefined' || id === 'null') return;
     if (!newMap.has(id)) {
-      deleteDoc(doc(db, collectionName, id)).catch(e => handleFirestoreError(e, OperationType.DELETE, collectionName));
+      deleteDoc(doc(db, collectionName, id)).catch(e => {
+        alert(`Database Delete Error (${collectionName}): ` + e.message);
+        handleFirestoreError(e, OperationType.DELETE, collectionName);
+      });
     }
   });
 }
@@ -103,6 +109,7 @@ export function useFirebaseSyncConfig<T>(collectionName: string, initialData: T)
          if (JSON.stringify(prev) !== JSON.stringify(newVal)) {
            setDoc(doc(db, collectionName, 'main'), newVal).catch(e => {
              console.error("Failed to sync config:", e);
+             alert(`Database Config Save Error! File might be too large: ` + e.message);
            });
          }
          return newVal;
