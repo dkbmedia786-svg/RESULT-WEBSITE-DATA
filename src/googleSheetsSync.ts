@@ -504,8 +504,14 @@ export async function fetchFromGoogleSheet(spreadsheetId: string): Promise<{
   admissions?: AdmissionApplication[];
 }> {
   const fetchTab = async (sheetName: string): Promise<any[]> => {
-    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-    const response = await fetch(url);
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+    const response = await fetch(url, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch tab ${sheetName} from public Google Sheet.`);
     }

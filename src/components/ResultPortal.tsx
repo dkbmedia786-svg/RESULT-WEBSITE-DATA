@@ -936,7 +936,7 @@ export default function ResultPortal({ results, config, triggerNotification }: R
                       overflow: 'hidden'
                     }}
                   >
-                    {foundResult.photoUrl ? (
+                    {foundResult.photoUrl && !foundResult.photoUrl.startsWith('[BASE64_IMAGE:') ? (
                       <img 
                         src={foundResult.photoUrl} 
                         alt="Candidate Portrait" 
